@@ -1,6 +1,9 @@
+from datetime import date, timedelta
+
 from django.db import models
 from django.contrib.auth.models import User
 
+LOAN_RETENTION_DAYS = 14
 class Author(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -40,7 +43,15 @@ class Loan(models.Model):
     member = models.ForeignKey(Member, related_name='loans', on_delete=models.CASCADE)
     loan_date = models.DateField(auto_now_add=True)
     return_date = models.DateField(null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
     is_returned = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.book.title} loaned to {self.member.user.username}"
+
+    @staticmethod
+    def calc_due_date():
+        return date.today() + timedelta(days=LOAN_RETENTION_DAYS)
+
+    def is_over_due(self):
+        return self.due_date < date.today()
